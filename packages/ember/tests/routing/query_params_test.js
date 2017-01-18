@@ -1334,4 +1334,78 @@ moduleFor('Query Params - main', class extends QueryParamTestCase {
       assert.equal(get(controller, 'foo'), '999');
     });
   }
+
+  ['@test can transition in the error hook'](assert) {
+    assert.expect(2)
+    this.setSingleQPController('index', 'changed', false)
+    this.registerRoute('index', Route.extend({
+      queryParams: {
+        changed: {
+          defaultValue: false
+        }
+      },
+
+      model() {
+        return RSVP.reject(new Error)
+      },
+
+      actions: {
+        error() {
+          this.transitionTo({
+            queryParams: { changed: true }
+          })
+        }
+      }
+    }))
+
+    return this.visitAndAssert('/').then(() => {
+      const controller = this.getController('index')
+      assert.ok(controller.get('changed'))
+    })
+  }
+
+  ['@test can transition in the beforeModel hook'](assert) {
+    this.setSingleQPController('index', 'changed', false)
+    this.registerRoute('index', Route.extend({
+      queryParams: {
+        changed: {
+          defaultValue: false
+        }
+      },
+
+      beforeModel() {
+        this.transitionTo({
+          queryParams: { changed: true }
+        })
+      }
+    }))
+
+    return this.visitAndAssert('/').then(() => {
+      const controller = this.getController('index')
+      assert.ok(controller.get('changed'))
+    })
+  }
+
+  ['@test can transition in thez redirect hook'](assert) {
+    this.setSingleQPController('index', 'changed', false)
+    this.registerRoute('index', Route.extend({
+      queryParams: {
+        changed: {
+          defaultValue: false
+        }
+      },
+
+      redirect() {
+        this.transitionTo({
+          queryParams: { changed: true }
+        })
+      }
+    }))
+
+    return this.visitAndAssert('/').then(() => {
+      const controller = this.getController('index')
+      assert.ok(controller.get('changed'))
+    })
+  }
 });
+
